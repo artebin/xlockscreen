@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+print_usage(){
+	cat << EOF
+Usage: $(basename ${BASH_SOURCE}) [OPTION]...
+Lock the screen with xtrlock after idle time.
+
+  -i DURATION_IN_SECONDS	Lock the screen after being idle for DURATION_IN_SECONDS.
+				If this option is missing then the default duration is 15 minutes.
+
+  -d DESKTOP_ID			Switch to the indicated virtual desktop before lock.
+
+  -c DURATION_IN_SECONDS	Duration in seconds between 2 idle time check.
+				If this option is missing then the default duration is 10 seconds.
+
+Dependencies: xprintidle, xtrlock.
+
+EOF
+}
+
+# Check that `xprintidle` is installed
+if [[ ! $(type xprintidle 2>/dev/null) ]]; then
+	printf "xprintidle is required for ${0} to run\n\n"
+	print_usage
+	exit 1
+fi
+
+# Check that `xtrlock` is installed
+if [[ ! $(type xtrlock 2>/dev/null) ]]; then
+	printf "xtrlock is required for ${0} to run\n\n"
+	print_usage
+	exit 1
+fi
+
+# Default idle duration for screen lock is 15 minutes
+DEFAULT_IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS=$(( 15 * 60 * 1000 ))
+IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS="${DEFAULT_IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS}"
+
+VIRTUAL_DESKTOP_ID=-1
+
+WAIT_BEFORE_CHECK_IDLE_IN_SECONDS=10
+
+IS_INTEGER_REGEX='^[0-9]+$'
+
+while getopts "hi:d:c:" ARG; do
+	case "${ARG}" in
+		h)
+			print_usage
+			exit
+			;;
+		i)
+			if ! [[ "${OPTARG}" =~ ${IS_INTEGER_REGEX} ]]; then
+				print_usage
+				exit 1
+			fi
+			IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS=$(( "${OPTARG}" * 1000 ))
+			;;
+		d)
+			if ! [[ "${OPTARG}" =~ ${IS_INTEGER_REGEX} ]]; then
+				print_usage
+				exit 1
+			fi
+			VIRTUAL_DESKTOP_ID="${OPTARG}"
+			;;
+		c)
+			if ! [[ "${OPTARG}" =~ ${IS_INTEGER_REGEX} ]]; then
+				print_usage
+				exit 1
+			fi
+			WAIT_BEFORE_CHECK_IDLE_IN_SECONDS="${OPTARG}"
+			;;
+		*)
+			printf "Unknown option: %s\n" "${ARG}" 1>&2
+			print_usage
+			exit 1
+			;;
+	esac
+done
+
+while :; do
+	IDLE_DURATION_IN_MILLIS=$(xprintidle)
+	if [[ "${IDLE_DURATION_IN_MILLIS}" -ge  "${IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS}" ]]; then
+		if [[ "${VIRTUAL_DESKTOP_ID}" -ne -1 ]]; then
+			wmctrl -s "${VIRTUAL_DESKTOP_ID}"
+		fi
+		[[ $(ps h -C xtrlock) ]] || xtrlock
+	fi
+	printf "IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS: %s\n" "${IDLE_DURATION_FOR_SCREEN_LOCK_IN_MILLIS}"
+	printf "VIRTUAL_DESKTOP_ID=%s\n" "${VIRTUAL_DESKTOP_ID}"
+	printf "IDLE_DURATION_IN_MILLIS: %s\n" "${IDLE_DURATION_IN_MILLIS}"
+	printf "\n"
+	printf "WAIT_BEFORE_CHECK_IDLE_IN_SECONDS=%s\n" "${WAIT_BEFORE_CHECK_IDLE_IN_SECONDS}"
+	printf "\n"
+	sleep "${WAIT_BEFORE_CHECK_IDLE_IN_SECONDS}"
+done

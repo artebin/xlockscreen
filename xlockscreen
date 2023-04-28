@@ -3,7 +3,7 @@
 print_usage(){
 	cat << EOF
 Usage: $(basename ${BASH_SOURCE}) [OPTION]...
-Lock the screen with xtrlock after idle time.
+Lock the screen with xtrlock after some idle time.
 
   -i DURATION_IN_SECONDS	Lock the screen after being idle for DURATION_IN_SECONDS.
 				If this option is missing then the default duration is 15 minutes.

@@ -1,4 +1,4 @@
-# xscreenlock
+# xlockscreen
 
 Simple script to lock the screen after some idle time and reset the current virtual desktop to a specific one.
 

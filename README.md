@@ -1,8 +1,8 @@
 # xlockscreen
 
-Simple script to lock the screen after some idle time and reset the current virtual desktop to a specific one.
-The screen locking is performed is <https://salsa.debian.org/debian/xtrlock>.
-This is typically used for demo and test screens supposed to run 24/7.
+Simple script to lock the screen after some idle time and reset the current virtual desktop to a specific one.  
+The screen locking is performed is [xtrlock](https://salsa.debian.org/debian/xtrlock).  
+This is typically used for demo and test screens supposed to run 24/7.  
 
 ## Usage
 
